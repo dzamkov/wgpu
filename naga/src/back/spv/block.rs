@@ -3345,7 +3345,7 @@ impl BlockContext<'_> {
                 Statement::SubgroupQuadSwap {
                     ref direction,
                     argument,
-                    result
+                    result,
                 } => {
                     self.writer.require_any(
                         "GroupNonUniformQuad",
@@ -3360,21 +3360,19 @@ impl BlockContext<'_> {
 
                     let arg_id = self.cached[argument];
 
-                    let direction = self.get_index_constant(match direction {
+                    let direction = self.get_index_constant(match *direction {
                         crate::Direction::X => 0,
                         crate::Direction::Y => 1,
                         crate::Direction::Diagonal => 2,
                     });
 
-                    block
-                        .body
-                        .push(Instruction::group_non_uniform_quad_swap(
-                            result_type_id,
-                            id,
-                            exec_scope_id,
-                            arg_id,
-                            direction
-                        ));
+                    block.body.push(Instruction::group_non_uniform_quad_swap(
+                        result_type_id,
+                        id,
+                        exec_scope_id,
+                        arg_id,
+                        direction,
+                    ));
                 }
             }
         }
