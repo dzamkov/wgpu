@@ -1139,9 +1139,11 @@ impl FunctionInfo {
                         | crate::GatherMode::Shuffle(index)
                         | crate::GatherMode::ShuffleDown(index)
                         | crate::GatherMode::ShuffleUp(index)
-                        | crate::GatherMode::ShuffleXor(index) => {
+                        | crate::GatherMode::ShuffleXor(index)
+                        | crate::GatherMode::QuadBroadcast(index) => {
                             let _ = self.add_ref(index);
                         }
+                        crate::GatherMode::QuadSwap(_) => {}
                     }
                     FunctionUniformity::new()
                 }

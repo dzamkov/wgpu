@@ -694,7 +694,8 @@ impl super::Validator {
             | crate::GatherMode::Shuffle(index)
             | crate::GatherMode::ShuffleDown(index)
             | crate::GatherMode::ShuffleUp(index)
-            | crate::GatherMode::ShuffleXor(index) => {
+            | crate::GatherMode::ShuffleXor(index)
+            | crate::GatherMode::QuadBroadcast(index) => {
                 let index_ty = context.resolve_type(index, &self.valid_expression_set)?;
                 match *index_ty {
                     crate::TypeInner::Scalar(crate::Scalar::U32) => {}
@@ -709,6 +710,7 @@ impl super::Validator {
                     }
                 }
             }
+            crate::GatherMode::QuadSwap(_) => {}
         }
         let argument_inner = context.resolve_type(argument, &self.valid_expression_set)?;
         if !matches!(*argument_inner,

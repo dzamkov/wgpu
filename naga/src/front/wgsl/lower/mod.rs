@@ -1080,6 +1080,7 @@ enum SubgroupGather {
     ShuffleDown,
     ShuffleUp,
     ShuffleXor,
+    QuadBroadcast,
 }
 
 impl SubgroupGather {
@@ -1091,6 +1092,7 @@ impl SubgroupGather {
             "subgroupShuffleDown" => Self::ShuffleDown,
             "subgroupShuffleUp" => Self::ShuffleUp,
             "subgroupShuffleXor" => Self::ShuffleXor,
+            "quadBroadcast" => Self::QuadBroadcast,
             _ => return None,
         })
     }
@@ -2932,6 +2934,77 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                                 .push(crate::Statement::SubgroupBallot { result, predicate }, span);
                             return Ok(Some(result));
                         }
+                        "quadSwapX" => {
+                            let mut args = ctx.prepare_args(arguments, 1, span);
+
+                            let argument = self.expression(args.next()?, ctx)?;
+                            args.finish()?;
+
+                            let ty = ctx.register_type(argument)?;
+
+                            let result = ctx.interrupt_emitter(
+                                crate::Expression::SubgroupOperationResult { ty },
+                                span,
+                            )?;
+                            let rctx = ctx.runtime_expression_ctx(span)?;
+                            rctx.block.push(
+                                crate::Statement::SubgroupGather {
+                                    mode: crate::GatherMode::QuadSwap(crate::Direction::X),
+                                    argument,
+                                    result,
+                                },
+                                span,
+                            );
+                            return Ok(Some(result));
+                        }
+
+                        "quadSwapY" => {
+                            let mut args = ctx.prepare_args(arguments, 1, span);
+
+                            let argument = self.expression(args.next()?, ctx)?;
+                            args.finish()?;
+
+                            let ty = ctx.register_type(argument)?;
+
+                            let result = ctx.interrupt_emitter(
+                                crate::Expression::SubgroupOperationResult { ty },
+                                span,
+                            )?;
+                            let rctx = ctx.runtime_expression_ctx(span)?;
+                            rctx.block.push(
+                                crate::Statement::SubgroupGather {
+                                    mode: crate::GatherMode::QuadSwap(crate::Direction::Y),
+                                    argument,
+                                    result,
+                                },
+                                span,
+                            );
+                            return Ok(Some(result));
+                        }
+
+                        "quadSwapDiagonal" => {
+                            let mut args = ctx.prepare_args(arguments, 1, span);
+
+                            let argument = self.expression(args.next()?, ctx)?;
+                            args.finish()?;
+
+                            let ty = ctx.register_type(argument)?;
+
+                            let result = ctx.interrupt_emitter(
+                                crate::Expression::SubgroupOperationResult { ty },
+                                span,
+                            )?;
+                            let rctx = ctx.runtime_expression_ctx(span)?;
+                            rctx.block.push(
+                                crate::Statement::SubgroupGather {
+                                    mode: crate::GatherMode::QuadSwap(crate::Direction::Diagonal),
+                                    argument,
+                                    result,
+                                },
+                                span,
+                            );
+                            return Ok(Some(result));
+                        }
                         _ => {
                             return Err(Box::new(Error::UnknownIdent(function.span, function.name)))
                         }
@@ -3435,12 +3508,13 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
         } else {
             let index = self.expression(args.next()?, ctx)?;
             match mode {
+                Sg::BroadcastFirst => unreachable!(),
                 Sg::Broadcast => crate::GatherMode::Broadcast(index),
                 Sg::Shuffle => crate::GatherMode::Shuffle(index),
                 Sg::ShuffleDown => crate::GatherMode::ShuffleDown(index),
                 Sg::ShuffleUp => crate::GatherMode::ShuffleUp(index),
                 Sg::ShuffleXor => crate::GatherMode::ShuffleXor(index),
-                Sg::BroadcastFirst => unreachable!(),
+                Sg::QuadBroadcast => crate::GatherMode::QuadBroadcast(index),
             }
         };
 
